@@ -1,6 +1,28 @@
 <script>
 // @ts-nocheck
-   import { goto } from "$app/navigation";
+    import { goto } from "$app/navigation";
+    import { Post, SetSessionToken } from "$lib/DataFetcher";
+
+    let Username
+    let Password
+    let ErrorText
+    let HideError = true
+    function Login(){
+        Post(
+            "login", 
+            {"username": Username, "password": Password}
+        ).then((d) => {
+            console.log(d)
+            if (d[1] != 200){
+                ErrorText = d[0]["message"]
+                HideError = false
+            }
+            else{
+                SetSessionToken(d[0]["session_token"])
+                goto("/home")
+            }
+        })
+    }
 </script>
 
 <style>
@@ -40,6 +62,9 @@
         height: 50px;
         font-size: large;
     }
+    #ErrorText{
+        color: rgb(151, 0, 0);
+    }
 </style>
 
 <div id=Content>
@@ -47,11 +72,13 @@
         <h1>Login</h1>
     </div>
     <div id="Inputs">
-        <input type="text" id=UsernameInput placeholder="username" tabindex="0">
-        <input type="password" id=PasswordInput placeholder="password" tabindex="0">
-        <p id="ErrorText" class="hidden">1516156156</p>
+        <input type="text" id=UsernameInput placeholder="username" tabindex="0" bind:value={Username}>
+        <input type="password" id=PasswordInput placeholder="password" tabindex="0" bind:value={Password}>
+        {#if !HideError}
+            <p id="ErrorText">{ErrorText}</p>
+        {/if}
     </div>
     <div id="Button">
-        <input type="button" value="Login" on:click={goto("/home")} tabindex="0">
+        <input type="button" value="Login" on:click={Login} tabindex="0">
     </div>
 </div>
