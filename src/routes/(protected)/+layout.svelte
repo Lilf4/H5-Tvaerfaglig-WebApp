@@ -19,6 +19,7 @@
 	:global(body){
 		background-color: rgb(126, 126, 126);
 		margin: 0px;
+		height: 100%;
 	}
 
 	:global(.hidden){

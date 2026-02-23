@@ -5,6 +5,7 @@
 
 <style>
     .FancyButton{
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
         height: 200px;
         width: 180px;
         background-color: lightgrey;
@@ -38,7 +39,7 @@
 
 <button type="button" class="FancyButton" on:click>
     <div class="ImgDiv">
-        <img src={image} alt="User">
+        <img src={image} alt="">
     </div>
     <div class="TxtDiv">
         <p>{text}</p>

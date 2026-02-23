@@ -48,10 +48,11 @@
     #HomeScreenButtons{
         margin: auto;
         margin-top: 10%;
-        width: 90%;
+        width: 375px;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
+        gap: 15px;
     }
 </style>
 
@@ -61,12 +62,12 @@
     </div>
 
     <div id="HomeScreenButtons">
-        <HomeScreenButton image={userImg} text="Profile"/>
-        <HomeScreenButton image={scheduleImg} text="Schedule"/>
-        <HomeScreenButton image={requestImg} text="Request"/>
+        <HomeScreenButton on:click={goto("/profile")} image={userImg} text="Profile"/>
+        <HomeScreenButton on:click={goto("/schedule")} image={scheduleImg} text="Schedule"/>
+        <HomeScreenButton on:click={goto("/request")} image={requestImg} text="Request"/>
         <HomeScreenButton image={checkinImg} text="Check-in/out"/>
         {#if role === 'leder'}
-            <HomeScreenButton image={adminImg} text="Admin Page"/>
+            <HomeScreenButton on:click={goto("/admin-page")} image={adminImg} text="Admin Page"/>
         {/if}
         <HomeScreenButton on:click={Logout} image={logoutImg} text="Logout"/>
     </div>
