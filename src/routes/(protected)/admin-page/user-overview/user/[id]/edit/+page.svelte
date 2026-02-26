@@ -1,14 +1,14 @@
 <script>
-// @ts-nocheck
-
+    // @ts-nocheck
+    import { page } from "$app/stores";
     import AnimatedLoading from "$lib/Components/AnimatedLoading.svelte";
     import BackButton from "$lib/Components/BackButton.svelte";
-    import { Get, GetSessionToken, Post, Put } from "$lib/DataFetcher";
+    import { Get, GetSessionToken } from "$lib/DataFetcher";
     import { onMount } from "svelte";
-    import { writable } from "svelte/store";
-    let ready = false;
+    const id = $page.params.id;
+    let ready = false
     let originalUser = null;
-    let user = null;
+    let user = null
     let roles = null;
     let chosen_role = null
 
@@ -16,10 +16,10 @@
     let newPassConfirm = "";
     onMount(async () => {
         await setDefault()
-    });
-    
+    })
+
     async function setDefault(){
-        let data = await Get("self", {"session-token": GetSessionToken()});
+        let data = await Get("user/"+id, {"session-token": GetSessionToken()});
         originalUser = {...data[0]["user"]};
         user = {...data[0]["user"]};
         chosen_role = user["role"]["role"]
@@ -101,10 +101,9 @@
 </style>
 
 {#if ready}
-    <BackButton backPage="/home"/>
-
+    <BackButton backPage="/admin-page"/>
     <div id="Content">
-        <h1>Profile Page</h1>
+        <h1>Edit {originalUser.name}</h1>
         <label id="UsernameLabel" for="UsernameInput">
             Username
             <input id="UsernameInput" type="text" placeholder="Username" bind:value="{user.username}">
@@ -115,7 +114,7 @@
         </label>
         <label id="RoleLabel" for="RoleInput">
             Role
-            <select id="RoleSelect" disabled bind:value={chosen_role}>
+            <select id="RoleSelect" bind:value={chosen_role}>
                 <option value="" disabled selected>Select Role</option>
                 {#each roles as role}
                     <option value="{role.role}" selected={role.role === user.role.role}>{role.role}</option>
@@ -138,7 +137,6 @@
             <button type="button" on:click={async () => {setDefault()}}>Defaults</button>
         </div>
     </div>
-
 {:else}
     <AnimatedLoading/>
 {/if}

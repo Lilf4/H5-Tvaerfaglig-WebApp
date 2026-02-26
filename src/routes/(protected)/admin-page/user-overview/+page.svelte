@@ -11,7 +11,7 @@
     let users = null
 
     onMount(async ()=>{
-        userData = await Get("users", {"session-token": GetSessionToken()})
+        let userData = await Get("users", {"session-token": GetSessionToken()})
         users = userData[0]["users"]
         ready = true
     })
@@ -23,6 +23,12 @@
     function gotoUser(id = -1){
         goto("/admin-page/user-overview/user/"+id)
     }
+
+    let searchQuery = "";
+                
+    $: filteredUsers = users?.filter(user => 
+        user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ) ?? [];
 </script>
 
 <style>
@@ -75,11 +81,11 @@
         <h1>User Overview</h1>
         <div id="ListContent">
             <div id="ListSearch">
-                <input type="text" placeholder="Search User">
-                <button type="button">+</button>
+                <input type="text" placeholder="Search User" bind:value={searchQuery}>
+                <button type="button" on:click={createUser}>+</button>
             </div>
             <div id="List">
-                {#each users as user (user.id)}
+                {#each filteredUsers as user (user.id)}
                     <ListItem text={user.name} on:click={() => gotoUser(user.id)}/>
                 {/each}
             </div>
