@@ -17,7 +17,7 @@
     })
 
     function createUser(){
-        goto("/admin-page/user-overview/user/edit-user")
+        goto("/admin-page/user-overview/user/-1/edit-user")
     }
 
     function gotoUser(id = -1){

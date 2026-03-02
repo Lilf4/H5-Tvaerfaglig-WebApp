@@ -6,11 +6,16 @@
     import { Get, GetSessionToken, Put } from "$lib/DataFetcher";
     import { onMount } from "svelte";
     const id = $page.params.id;
+    const schedule_id = $page.params.schedule_id;
     let ready = false
-    let originalUser = null;
-    let user = null
-    let roles = null;
-    let chosen_role = null
+    let originalSchedule = null;
+    let schedule = null;
+
+    let Weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    let SelectedWeekday = null;
+    let formattedStartTime = null;
+    let formattedEndTime = null;
 
     let newPass = "";
     let newPassConfirm = "";
@@ -19,15 +24,14 @@
     })
 
     async function setDefault(){
-        let data = await Get("user/"+id, {"session-token": GetSessionToken()});
-        originalUser = {...data[0]["user"]};
-        user = {...data[0]["user"]};
-        console.log(user)
-        chosen_role = user["role"]["role"]
-        
-        let roleData = await Get("roles", {"session-token": GetSessionToken()});
-        roles = roleData[0]["roles"];
-        
+        let data = await Get("scheduled_time/"+schedule_id, {"session-token": GetSessionToken()});
+        originalSchedule = {...data[0]["schedule"]};
+        schedule = {...data[0]["schedule"]};
+        SelectedWeekday = Weekdays[schedule.weekDay-1]
+        formattedStartTime = schedule.startTime.split(":").slice(0, 2).join(":")
+        formattedEndTime = schedule.endTime.split(":").slice(0, 2).join(":");
+        console.log(data)
+
         newPass = ""
         newPassConfirm = ""
         if (!ready) ready = true;
@@ -60,7 +64,6 @@
         })
     }
 </script>
-
 <style>
     #Content{
         height: 100%;
@@ -100,37 +103,30 @@
         border: none;
     }
 </style>
-
 {#if ready}
-    <BackButton backPage={"/admin-page/user-overview/user/"+id}/>
+    <BackButton backPage="/admin-page"/>
     <div id="Content">
-        <h1>Edit {originalUser.name}</h1>
-        <label id="UsernameLabel" for="UsernameInput">
-            Username
-            <input id="UsernameInput" type="text" placeholder="Username" bind:value="{user.username}">
-        </label>
-        <label id="NameLabel" for="NameInput">
-            Name
-            <input id="NameInput" type="text" placeholder="Name" bind:value={user.name}>
-        </label>
-        <label id="RoleLabel" for="RoleInput">
-            Role
-            <select id="RoleSelect" bind:value={chosen_role}>
-                <option value="" disabled selected>Select Role</option>
-                {#each roles as role}
-                    <option value="{role.role}" selected={role.role === user.role.role}>{role.role}</option>
+        <h1>Edit Schedule</h1>
+        <label id="WeekdayLabel" for="WeekdaySelect">
+            Weekday
+            <select id="WeekdaySelect" bind:value={SelectedWeekday}>
+                <option value="" disabled selected>Select Weekday</option>
+                {#each Weekdays as Weekday}
+                    <option value="{Weekday}" selected={Weekday === SelectedWeekday}>{Weekday}</option>
                 {/each}
             </select>
         </label>
-        <p id="CreatedTime">Created at: {user.created_at}</p>
-        <div id="SpacerDiv"></div>
-        <label id="NewPasswordLabel" for="NewPasswordInput">
-            New Password
-            <input id="NewPasswordInput" type="password" placeholder="Password" bind:value={newPass}>
+        <label id="StartTimeLabel" for="StartTimeInput">
+            Start Time
+            <input id="StartTimeInput" type="time" bind:value={formattedStartTime} placeholder="HH:mm">
         </label>
-        <label id="NewPasswordConfirmLabel" for="NewPasswordConfirmInput">
-            New Password Again
-            <input id="NewPasswordConfirmInput" type="password" placeholder="Password" bind:value={newPassConfirm}>
+        <label id="EndTimeLabel" for="EndTimeInput">
+            End Time
+            <input id="EndTimeInput" type="time" bind:value={formattedEndTime} placeholder="HH:mm">
+        </label>
+        <label id="InactiveLabel" for="InactiveInput">
+            Inactive
+            <input id="InactiveInput" type="checkbox" bind:checked={schedule.inactive}>
         </label>
 
         <div id="ButtonDiv">
