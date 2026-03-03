@@ -1,9 +1,10 @@
 <script>
     // @ts-nocheck
+    import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import AnimatedLoading from "$lib/Components/AnimatedLoading.svelte";
     import BackButton from "$lib/Components/BackButton.svelte";
-    import { Get, GetSessionToken, Put } from "$lib/DataFetcher";
+    import { Delete, Get, GetSessionToken, Post, Put } from "$lib/DataFetcher";
     import { onMount } from "svelte";
     const id = $page.params.id;
     const schedule_id = $page.params.schedule_id;
@@ -14,53 +15,92 @@
     let Weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
     let SelectedWeekday = null;
+    let originalFormattedStartTime = null;
     let formattedStartTime = null;
+    let originalFormattedEndTime = null;
     let formattedEndTime = null;
 
-    let newPass = "";
-    let newPassConfirm = "";
     onMount(async () => {
         await setDefault()
     })
 
     async function setDefault(){
+        if (schedule_id == -1) {
+            let emptySchedule = {
+                "user_id": id,
+                "inactive": false,
+            }
+            originalSchedule = {...emptySchedule};
+            schedule = {...emptySchedule};
+            SelectedWeekday = Weekdays[0]
+            originalFormattedStartTime = "00:00"
+            formattedStartTime = "00:00"
+            originalFormattedEndTime = "00:00"
+            formattedEndTime = "00:00"
+            if (!ready) ready = true;
+            return
+        }
+
         let data = await Get("scheduled_time/"+schedule_id, {"session-token": GetSessionToken()});
         originalSchedule = {...data[0]["schedule"]};
         schedule = {...data[0]["schedule"]};
         SelectedWeekday = Weekdays[schedule.weekDay-1]
+        originalFormattedStartTime = schedule.startTime.split(":").slice(0, 2).join(":")
         formattedStartTime = schedule.startTime.split(":").slice(0, 2).join(":")
+        originalFormattedEndTime = schedule.endTime.split(":").slice(0, 2).join(":");
         formattedEndTime = schedule.endTime.split(":").slice(0, 2).join(":");
-        console.log(data)
 
-        newPass = ""
-        newPassConfirm = ""
         if (!ready) ready = true;
         return
     }
 
     async function update(){
-        let role_id = -1
-        for (let role in roles){
-            if (chosen_role == role.role){
-                role_id = role.id
+        let weekDayID = -1
+        let i = 1;
+        for (let weekDay of Weekdays){
+            if (SelectedWeekday == weekDay){
+                weekDayID = i
                 break;
             }
+            i++;
         }
-        let password = null
-        if (newPass && newPass === newPassConfirm) {
-            password = newPass;
+        if (schedule_id == -1){
+            await Post(
+                "scheduled_time",
+                {
+                    "weekDay": weekDayID,
+                    "startTime": formattedStartTime,
+                    "endTime": formattedEndTime,
+                    "user_id": schedule.user_id, 
+                    "inactive": schedule.inactive
+                },
+                {"session-token": GetSessionToken()}
+            ).then(()=>{
+                goto("/admin-page/user-overview/user/"+id+"/schedules")
+            })
         }
-        await Put(
-            "user/"+user.id, 
-            {
-                "name": originalUser.name != user.name ? user.name : null, 
-                "username": originalUser.username != user.username ? user.username : null, 
-                "password": password, 
-                "role_id": role_id}, 
-            {"session-token": GetSessionToken()}
-        ).then(() => {
-            ready = false
-            setDefault()
+        else{
+            await Put(
+                "scheduled_time/"+schedule_id, 
+                {
+                    "weekDay": weekDayID, 
+                    "startTime": originalFormattedEndTime != formattedStartTime ? formattedStartTime : null, 
+                    "endTime": originalFormattedEndTime != formattedEndTime ? formattedEndTime : null, 
+                    "user_id": schedule.user_id, 
+                    "inactive": originalSchedule.inactive != schedule.inactive ? schedule.inactive : null}, 
+                {"session-token": GetSessionToken()}
+            ).then(() => {
+                ready = false
+                setDefault()
+            })
+        }
+    }
+
+    async function removeSchedule() {
+        Delete("scheduled_time/"+schedule_id, {
+            "session-token": GetSessionToken()
+        }).then(()=>{
+            goto("/admin-page/user-overview/user/"+id+"/schedules")
         })
     }
 </script>
@@ -87,7 +127,13 @@
         height: 30px;
     }
 
-    #SpacerDiv{
+    input[type="checkbox"]{
+        height: 30px;
+        width: 30px;
+        align-self: flex-start;
+    }
+
+    .SpacerDiv{
         height: 50px;
     }
 
@@ -104,7 +150,7 @@
     }
 </style>
 {#if ready}
-    <BackButton backPage="/admin-page"/>
+    <BackButton backPage={"/admin-page/user-overview/user/"+id+"/schedules"}/>
     <div id="Content">
         <h1>Edit Schedule</h1>
         <label id="WeekdayLabel" for="WeekdaySelect">
@@ -128,10 +174,14 @@
             Inactive
             <input id="InactiveInput" type="checkbox" bind:checked={schedule.inactive}>
         </label>
-
+        <div class="SpacerDiv"></div>
         <div id="ButtonDiv">
             <button type="button" on:click={() => {update()}}>Update</button>
             <button type="button" on:click={async () => {setDefault()}}>Defaults</button>
+        </div>
+        <div class="SpacerDiv"></div>
+        <div id="ButtonDiv">
+            <button type="button" on:click={() => {removeSchedule()}}>Delete</button>
         </div>
     </div>
 {:else}

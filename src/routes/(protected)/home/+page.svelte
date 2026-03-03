@@ -19,7 +19,6 @@
     let ready = false
     onMount(async ()=>{
         let userData = await Get("self", {"session-token": GetSessionToken()}).then((d) => {return d[0]})
-        console.log(userData)
         name = userData["user"]["name"]
         role = userData["user"]["role"]["role"]
         ready = true
@@ -62,12 +61,12 @@
     </div>
 
     <div id="HomeScreenButtons">
-        <HomeScreenButton on:click={goto("/profile")} image={userImg} text="Profile"/>
-        <HomeScreenButton on:click={goto("/schedule")} image={scheduleImg} text="Schedule"/>
-        <HomeScreenButton on:click={goto("/request")} image={requestImg} text="Request"/>
+        <HomeScreenButton on:click={()=>goto("/profile")} image={userImg} text="Profile"/>
+        <HomeScreenButton on:click={()=>goto("/schedule")} image={scheduleImg} text="Schedule"/>
+        <HomeScreenButton on:click={()=>goto("/request-overview")} image={requestImg} text="Request"/>
         <HomeScreenButton image={checkinImg} text="Check-in/out"/>
         {#if role === 'leder'}
-            <HomeScreenButton on:click={goto("/admin-page")} image={adminImg} text="Admin Page"/>
+            <HomeScreenButton on:click={()=>goto("/admin-page")} image={adminImg} text="Admin Page"/>
         {/if}
         <HomeScreenButton on:click={Logout} image={logoutImg} text="Logout"/>
     </div>

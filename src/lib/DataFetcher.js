@@ -118,16 +118,20 @@ export async function Put(endpoint, body=null, header=null, form=false){
 }
 
 export function GetSessionToken(){
-    return sessionStorage.getItem('sessionToken');
+    return localStorage.getItem('sessionToken');
 }
 
 export function SetSessionToken(token){
-    sessionStorage.setItem('sessionToken', token);
+    localStorage.setItem('sessionToken', token);
 }
 
-export async function ValidateSession(){
+export async function ValidateSession(doGoto = true){
     return await Get("valid_session", {"session-token": GetSessionToken()}).then((d) => {
-        if (d[1] == 200) {return true}
-        goto("/")
+        if (d[1] == 200) {
+            return true
+        }
+        if (doGoto){
+            goto("/")
+        }
     })
 }

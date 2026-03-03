@@ -29,7 +29,7 @@
     let searchQuery = "";
                 
     $: filteredSchedules = schedules?.filter(schedule => 
-        (Weekdays[schedule.weekDay-1]+": "+(schedule.startTime.split(":").slice(0, 2).join(":"))+"-"+(schedule.endTime.split(":").slice(0, 2).join(":"))).includes(searchQuery.toLowerCase())
+        (Weekdays[schedule.weekDay-1].toLowerCase()+": "+(schedule.startTime.split(":").slice(0, 2).join(":"))+"-"+(schedule.endTime.split(":").slice(0, 2).join(":"))).includes(searchQuery.toLowerCase())
     ) ?? [];
 </script>
 
@@ -77,6 +77,7 @@
     }
 </style>
 
+
 {#if ready}
     <BackButton backPage={"/admin-page/user-overview/user/"+id}/>
     <div id="Content">
@@ -84,7 +85,7 @@
         <div id="ListContent">
             <div id="ListSearch">
                 <input type="text" placeholder="Search Schedule" bind:value={searchQuery}>
-                <button type="button" on:click={gotoSchedule}>+</button>
+                <button type="button" on:click={()=>gotoSchedule()}>+</button>
             </div>
             <div id="List">
                 {#each filteredSchedules as schedule (schedule.id)}

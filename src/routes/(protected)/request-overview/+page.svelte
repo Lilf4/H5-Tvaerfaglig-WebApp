@@ -2,33 +2,39 @@
 // @ts-nocheck
 
     import { goto } from "$app/navigation";
+    import { page } from "$app/stores";
     import AnimatedLoading from "$lib/Components/AnimatedLoading.svelte";
     import BackButton from "$lib/Components/BackButton.svelte";
     import ListItem from "$lib/Components/ListItem.svelte";
     import { Get, GetSessionToken } from "$lib/DataFetcher";
     import { onMount } from "svelte";
     let ready = false
-    let users = null
+    let requests = null
+    let requestTypes = null
+    let user = null
 
     onMount(async ()=>{
-        let userData = await Get("users", {"session-token": GetSessionToken()})
-        users = userData[0]["users"]
+        let userData = await Get("self", {"session-token": GetSessionToken()})
+        user = userData[0]["user"]
+
+        let requestData = await Get("requests/"+user.id+"&"+"true", {"session-token": GetSessionToken()})
+        requests = requestData[0]["requests"]
+
+        let requestTypeData = await Get("request_types", {"session-token": GetSessionToken()})
+        requestTypes = requestTypeData[0]["request_types"]
+        console.log(requestTypes)
         ready = true
     })
 
-    function createUser(){
-        goto("/admin-page/user-overview/user/-1/edit")
-    }
-
-    function gotoUser(id = -1){
-        goto("/admin-page/user-overview/user/"+id)
+    function gotoRequest(schedule_id = -1){
+        goto("/admin-page/user-overview/user/"+id+"/schedules/schedule-editor/"+schedule_id)
     }
 
     let searchQuery = "";
                 
-    $: filteredUsers = users?.filter(user => 
-        user.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ) ?? [];
+    $: filteredRequests = requests && requestTypes ? requests.filter(request => 
+        (requestTypes[request.type_id-1].type_name).includes(searchQuery.toLowerCase())
+    ) : [];
 </script>
 
 <style>
@@ -75,18 +81,19 @@
     }
 </style>
 
+
 {#if ready}
-    <BackButton backPage="/admin-page"/>
+    <BackButton backPage={"/"}/>
     <div id="Content">
-        <h1>User Overview</h1>
+        <h1>Schedule Overview</h1>
         <div id="ListContent">
             <div id="ListSearch">
-                <input type="text" placeholder="Search User" bind:value={searchQuery}>
-                <button type="button" on:click={()=>createUser()}>+</button>
+                <input type="text" placeholder="Search Schedule" bind:value={searchQuery}>
+                <button type="button" on:click={()=>gotoSchedule()}>+</button>
             </div>
             <div id="List">
-                {#each filteredUsers as user (user.id)}
-                    <ListItem text={user.name} on:click={() => gotoUser(user.id)}/>
+                {#each filteredRequests as request (request.id)}
+                    <ListItem text={requestTypes[request.type_id-1].type_name} on:click={() => gotoRequest(request.id)}/>
                 {/each}
             </div>
         </div>

@@ -48,7 +48,7 @@
     <div>
         <h1>{user.name} overview</h1>
         <HomeScreenButton on:click={() => goto("/admin-page/user-overview/user/"+id+"/edit")} image={editImg} text="Edit"/>
-        <HomeScreenButton on:click={goto("/admin-page/user-overview/user/"+id+"/schedules")} image={scheduleImg} text="Schedules"/>
+        <HomeScreenButton on:click={()=>goto("/admin-page/user-overview/user/"+id+"/schedules")} image={scheduleImg} text="Schedules"/>
         <HomeScreenButton on:click={async () => {TryDelete()}} image={trashImg} text="Delete"/>
     </div>
 {:else}

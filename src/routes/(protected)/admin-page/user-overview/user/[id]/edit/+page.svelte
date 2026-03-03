@@ -1,9 +1,13 @@
 <script>
+// @ts-nocheck
+
+    import { goto } from "$app/navigation";
+
     // @ts-nocheck
     import { page } from "$app/stores";
     import AnimatedLoading from "$lib/Components/AnimatedLoading.svelte";
     import BackButton from "$lib/Components/BackButton.svelte";
-    import { Get, GetSessionToken, Put } from "$lib/DataFetcher";
+    import { Get, GetSessionToken, Post, Put } from "$lib/DataFetcher";
     import { onMount } from "svelte";
     const id = $page.params.id;
     let ready = false
@@ -19,14 +23,27 @@
     })
 
     async function setDefault(){
+        let roleData = await Get("roles", {"session-token": GetSessionToken()});
+        roles = roleData[0]["roles"];
+
+        if (id == -1) {
+            let emptyUser = {
+                "name": "",
+                "username": "",
+                "role": "medarbejder",
+                "created_at": 0
+            }
+            originalUser = {...emptyUser}
+            user = {...emptyUser}
+            chosen_role = user.role
+            
+            if (!ready) ready = true;
+            return
+        }
         let data = await Get("user/"+id, {"session-token": GetSessionToken()});
         originalUser = {...data[0]["user"]};
         user = {...data[0]["user"]};
-        console.log(user)
         chosen_role = user["role"]["role"]
-        
-        let roleData = await Get("roles", {"session-token": GetSessionToken()});
-        roles = roleData[0]["roles"];
         
         newPass = ""
         newPassConfirm = ""
@@ -36,7 +53,7 @@
 
     async function update(){
         let role_id = -1
-        for (let role in roles){
+        for (let role of roles){
             if (chosen_role == role.role){
                 role_id = role.id
                 break;
@@ -46,18 +63,38 @@
         if (newPass && newPass === newPassConfirm) {
             password = newPass;
         }
-        await Put(
-            "user/"+user.id, 
-            {
-                "name": originalUser.name != user.name ? user.name : null, 
-                "username": originalUser.username != user.username ? user.username : null, 
-                "password": password, 
-                "role_id": role_id}, 
-            {"session-token": GetSessionToken()}
-        ).then(() => {
-            ready = false
-            setDefault()
-        })
+        if (id == -1){
+            if (originalUser.name == user.name || originalUser.username == user.username || password == null){
+                alert("All fields need to be filled when creating a new user")
+                return
+            }
+            await Post(
+                "user",
+                {
+                    "name": user.name,
+                    "username": user.username,
+                    "password": password,
+                    "role_id": role_id
+                },
+                {"session-token": GetSessionToken()}
+            ).then(()=>{
+                goto("/admin-page/user-overview")
+            })
+        }
+        else{
+            await Put(
+                "user/"+user.id, 
+                {
+                    "name": originalUser.name != user.name ? user.name : null, 
+                    "username": originalUser.username != user.username ? user.username : null, 
+                    "password": password, 
+                    "role_id": role_id}, 
+                {"session-token": GetSessionToken()}
+            ).then(() => {
+                ready = false
+                setDefault()
+            })
+        }
     }
 </script>
 
@@ -102,7 +139,11 @@
 </style>
 
 {#if ready}
-    <BackButton backPage={"/admin-page/user-overview/user/"+id}/>
+    {#if id != -1}
+        <BackButton backPage={"/admin-page/user-overview/user/"+id}/>
+    {:else}
+        <BackButton backPage={"/admin-page/user-overview/"}/>
+    {/if}
     <div id="Content">
         <h1>Edit {originalUser.name}</h1>
         <label id="UsernameLabel" for="UsernameInput">
@@ -122,7 +163,9 @@
                 {/each}
             </select>
         </label>
+        {#if user.created_at != 0}
         <p id="CreatedTime">Created at: {user.created_at}</p>
+        {/if}
         <div id="SpacerDiv"></div>
         <label id="NewPasswordLabel" for="NewPasswordInput">
             New Password

@@ -1,7 +1,8 @@
 <script>
 // @ts-nocheck
+    import { onMount } from "svelte";
     import { goto } from "$app/navigation";
-    import { Post, SetSessionToken } from "$lib/DataFetcher";
+    import { Get, GetSessionToken, Post, SetSessionToken, ValidateSession } from "$lib/DataFetcher";
 
     let Username
     let Password
@@ -23,6 +24,13 @@
             }
         })
     }
+    async function CheckIfAlreadyLoggedIn(){
+        if (await ValidateSession(false)){
+            goto("/home")
+        }
+    }
+
+    onMount(async ()=>{CheckIfAlreadyLoggedIn()})
 </script>
 
 <style>
