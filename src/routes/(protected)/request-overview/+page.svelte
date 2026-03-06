@@ -26,8 +26,8 @@
         ready = true
     })
 
-    function gotoRequest(schedule_id = -1){
-        goto("/admin-page/user-overview/user/"+id+"/schedules/schedule-editor/"+schedule_id)
+    function gotoRequest(request_id = -1){
+        goto("/request-overview/"+request_id)
     }
 
     let searchQuery = "";
@@ -89,7 +89,7 @@
         <div id="ListContent">
             <div id="ListSearch">
                 <input type="text" placeholder="Search Schedule" bind:value={searchQuery}>
-                <button type="button" on:click={()=>gotoSchedule()}>+</button>
+                <button type="button" on:click={()=>gotoRequest()}>+</button>
             </div>
             <div id="List">
                 {#each filteredRequests as request (request.id)}
