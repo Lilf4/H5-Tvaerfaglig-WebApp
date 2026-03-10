@@ -37,12 +37,11 @@
         let numbers = []
         let OffsetToMonday = (d.getDay()-1 == -1 ? 6 : d.getDay()-1)
         
-        let Monday = new Date(d)
-        Monday.setDate(d.getDate()-OffsetToMonday)
+        d.setDate(d.getDate()-OffsetToMonday)
         
         for(let i = 0; i < 7; i++){
-            let temp = new Date(Monday)
-            temp.setDate(Monday.getDate()+i);
+            let temp = new Date(d)
+            temp.setDate(d.getDate()+i);
             numbers.push(temp.getDate())
         }
         return numbers;
@@ -107,6 +106,48 @@
     }
     #ScheduleContent table tr:nth-child(even){
         background-color: rgb(202, 202, 202);
+    }
+
+    #ScheduleContent table tbody td {
+        height: 100%;
+        padding: 0px;
+    }
+
+    #ScheduleContent table tbody td .Start{
+        width: 100%;
+    }
+
+    #ScheduleContent table tbody td:has(.Start){
+        display: flex;
+        align-items: flex-end;
+        text-align: left;
+    }
+
+    #ScheduleContent table tbody td .Middle{
+        width: 100%;
+        height: 100%;
+    }
+
+    #ScheduleContent table tbody td .Schedule{
+        background-color: rgba(244, 164, 96, 0.7);
+    }
+
+    #ScheduleContent table tbody td .ProcessedRequest{
+        background-color: rgba(0, 255, 255, 0.7);
+        
+    }
+
+    #ScheduleContent table tbody td:has(.Middle){
+        display: flex;
+    }
+
+    #ScheduleContent table tbody td .End{
+        width: 100%;
+    }
+
+    #ScheduleContent table tbody td:has(.End){
+        display: flex;
+        align-items: flex-start;
     }
     /*END Main Boxes END*/
 
@@ -188,6 +229,10 @@
         width: 100%;
     }
     /*END Week Display END*/
+
+    p{
+        margin: 0px;
+    }
 </style>
 
 {#if ready}
@@ -249,7 +294,15 @@
                     {#each [...Array(24).keys()] as hour}
                         <tr>
                             <td>{String(hour).padStart(2, '0')}:00</td>
-                            <td>Schedule item</td>
+                            <td>
+                                <div 
+                                class={(hour==1 ? "Start":"")+" "+(hour==2 ? "Middle":"")+" "+(hour==3 ? "End":"")+" Schedule"}
+                                style={(hour==1||hour==3 ? "height: 50%;": "")}>
+                                    {#if hour==1}
+                                        <p style="font-size: smaller;">01:30 - 03:30</p>
+                                    {/if}
+                                </div>
+                            </td>
                         </tr>
                     {/each}
                 </tbody>
