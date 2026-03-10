@@ -11,6 +11,11 @@
     let SelectedDate = new Date();
     let dateInput;
 
+    let Schedules = null;
+
+    let Requests = null;
+    let RequestTypes = null;
+
     function openCalendar() {
         dateInput.showPicker();
     }
@@ -36,7 +41,6 @@
         const d = new Date(date);
         let numbers = []
         let OffsetToMonday = (d.getDay()-1 == -1 ? 6 : d.getDay()-1)
-        
         d.setDate(d.getDate()-OffsetToMonday)
         
         for(let i = 0; i < 7; i++){
@@ -53,14 +57,93 @@
         SelectedDate = newDate
     }
 
-    /*
+    
     onMount(async ()=>{
         let userData = await Get("self", {"session-token": GetSessionToken()})
         user = userData[0]["user"]
+        
+        let scheduleData = await Get("scheduled_times/"+user.id, {"session-token": GetSessionToken()})
+        Schedules = scheduleData[0]["schedules"]
+        
+        let requestData = await Get("requests/"+user.id+"&true", {"session-token": GetSessionToken()})
+        Requests = requestData[0]["requests"]
+
+        let requestTypeData = await Get("request_types", {"session-token": GetSessionToken()})
+        RequestTypes = requestTypeData[0]["request_types"]
+        selDaySchedule = getRelevantSchedules(SelectedDate)
+        selDayRequest = getRelevantRequest(SelectedDate)
+
+        console.log(selDayRequest)
+        //console.log(requestData)
 
         ready = true
     })
-    */
+
+    function getRelevantSchedules(date){
+        if (Schedules == null) return [null]
+        let relevantSchedule = []
+        let tempSchedule = []
+        let CurrDay = (date.getDay()-1 == -1 ? 7 : date.getDay())
+        Schedules.forEach(schedule => {
+            if (CurrDay == schedule.weekDay){
+                tempSchedule.push(schedule)
+            }
+        });
+        tempSchedule.forEach(schedule => {
+            let startTimeSplit = schedule.startTime.split(":")
+            let endTimeSplit = schedule.endTime.split(":")
+            relevantSchedule.push({
+                "StartHour": Number(startTimeSplit[0]),
+                "StartMin": Number(startTimeSplit[1]),
+                "StartPercent": (1-startTimeSplit[1]/60)*100,
+                "EndHour": Number(endTimeSplit[0]),
+                "EndMin": Number(endTimeSplit[1]),
+                "EndPercent": (endTimeSplit[1]/60*100)
+            })
+        })
+        return relevantSchedule
+    }
+
+    
+    function getRelevantRequest(date){
+        if (Requests == null) return [null]
+        let relevantRequests = []
+        let tempRequests = []
+        Requests.forEach(request => {
+            let DateTimeSplit = request.request.startDay.split("T")
+            let splitStartRequestDate = [].concat(DateTimeSplit[0].split("-"), DateTimeSplit[1].split(":").slice(0, 2))
+            DateTimeSplit = request.request.endDay.split("T")
+            let splitEndRequestDate = [].concat(DateTimeSplit[0].split("-"), DateTimeSplit[1].split(":").slice(0, 2))
+            
+            if (
+                request.processed != null &&
+                SelectedDate.getFullYear() >= Number(splitStartRequestDate[0]) &&
+                SelectedDate.getFullYear() <= Number(splitEndRequestDate[0]) &&
+                (SelectedDate.getMonth()+1) >= Number(splitStartRequestDate[1]) &&
+                (SelectedDate.getMonth()+1) <= Number(splitEndRequestDate[1]) &&
+                SelectedDate.getDate() >= Number(splitStartRequestDate[2]) &&
+                SelectedDate.getDate() <= Number(splitEndRequestDate[2])
+            ){
+                tempRequests.push({...request, "SplitStartRequestDate": splitStartRequestDate, "SplitEndRequestDate": splitEndRequestDate})
+            }
+        });
+        tempRequests.forEach(request => {
+            relevantRequests.push({
+                "StartHour": Number(request.SplitStartRequestDate[3]),
+                "StartMin": Number(request.SplitStartRequestDate[4]),
+                "StartPercent": (1-request.SplitStartRequestDate[4]/60)*100,
+                "EndHour": Number(request.SplitEndRequestDate[3]),
+                "EndMin": Number(request.SplitEndRequestDate[4]),
+                "EndPercent": (request.SplitEndRequestDate[4]/60*100),
+                "RequestType": RequestTypes[request.request.type_id-1].type_name
+            })
+        })
+        return relevantRequests
+    }
+
+    $: selDaySchedule = getRelevantSchedules(SelectedDate)
+    $: selDayRequest = getRelevantRequest(SelectedDate)
+    
 </script>
 
 <style>
@@ -91,6 +174,7 @@
         width: 100%;
         border-collapse: collapse;
         text-align: center;
+        table-layout: fixed;
     }
 
     #ScheduleContent table tbody tr{
@@ -111,18 +195,24 @@
     #ScheduleContent table tbody td {
         height: 100%;
         padding: 0px;
+        position:relative;
     }
 
     #ScheduleContent table tbody td .Start{
+        display: flex;
+        align-items: flex-end;
         width: 100%;
+        position: absolute;
+        bottom: 0px;
     }
 
+    /*
     #ScheduleContent table tbody td:has(.Start){
         display: flex;
         align-items: flex-end;
         text-align: left;
     }
-
+*/
     #ScheduleContent table tbody td .Middle{
         width: 100%;
         height: 100%;
@@ -137,18 +227,22 @@
         
     }
 
+    /*
     #ScheduleContent table tbody td:has(.Middle){
         display: flex;
     }
-
+    */
     #ScheduleContent table tbody td .End{
         width: 100%;
+        position: absolute;
+        top: 0px;
     }
-
+    /*
     #ScheduleContent table tbody td:has(.End){
         display: flex;
         align-items: flex-start;
     }
+    */
     /*END Main Boxes END*/
 
     /*START Week/Date Display START*/
@@ -292,18 +386,50 @@
             <table>
                 <tbody>
                     {#each [...Array(24).keys()] as hour}
-                        <tr>
-                            <td>{String(hour).padStart(2, '0')}:00</td>
+                    <tr>
+                        <td>{String(hour).padStart(2, '0')}:00</td>
+                        {#key hour}
+                            {@const schedule = selDaySchedule.find(
+                                s => s && hour >= s.StartHour && hour <= s.EndHour
+                            )}
                             <td>
-                                <div 
-                                class={(hour==1 ? "Start":"")+" "+(hour==2 ? "Middle":"")+" "+(hour==3 ? "End":"")+" Schedule"}
-                                style={(hour==1||hour==3 ? "height: 50%;": "")}>
-                                    {#if hour==1}
-                                        <p style="font-size: smaller;">01:30 - 03:30</p>
-                                    {/if}
-                                </div>
+                                {#if schedule}
+                                    <div
+                                        class={(hour == schedule.StartHour ? "Start":"")+" "+((hour>schedule.StartHour&&hour<schedule.EndHour) ? "Middle":"")+" "+(schedule.EndHour===hour ? "End":"")+" Schedule"}
+                                        style={((hour == schedule.StartHour) ? "height: "+(schedule.StartPercent)+"%;": "") + ((hour == schedule.EndHour) ? "height: "+(schedule.EndPercent)+"%;": "")}>
+
+                                        {#if hour == schedule.StartHour}
+                                            <p style="font-size: smaller; position: relative; top: 0px;">
+                                                {String(schedule.StartHour).padStart(2, '0')}:{String(schedule.StartMin).padStart(2, '0')} -
+                                                {String(schedule.EndHour).padStart(2, '0')}:{String(schedule.EndMin).padStart(2, '0')}
+                                            </p>
+                                        {/if}
+
+                                    </div>
+                                {/if}
                             </td>
-                        </tr>
+                        {/key}
+                        {#each selDayRequest as request}
+                        {#if request != null}
+                        <td>
+                            {#if hour >= request.StartHour && hour <= request.EndHour}
+                                <div
+                                    class={(hour == request.StartHour ? "Start":"")+" "+((hour>request.StartHour&&hour<request.EndHour) ? "Middle":"")+" "+(request.EndHour===hour ? "End":"")+" Request"}
+                                    style={((hour == request.StartHour) ? "height: "+(request.StartPercent)+"%;": "") + ((hour == request.EndHour) ? "height: "+(request.EndPercent)+"%;": "")}>
+
+                                    {#if hour == request.StartHour}
+                                        <p style="font-size: smaller; position: relative; top: 0px;">
+                                            {String(request.StartHour).padStart(2, '0')}:{String(request.StartMin).padStart(2, '0')} -
+                                            {String(request.EndHour).padStart(2, '0')}:{String(request.EndMin).padStart(2, '0')}: {request.RequestType}
+                                        </p>
+                                    {/if}
+
+                                </div>
+                            {/if}
+                        </td>
+                        {/if}
+                        {/each}
+                    </tr>
                     {/each}
                 </tbody>
             </table>
