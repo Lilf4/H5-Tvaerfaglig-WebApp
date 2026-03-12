@@ -17,11 +17,12 @@
         let userData = await Get("self", {"session-token": GetSessionToken()})
         user = userData[0]["user"]
 
-        let requestData = await Get("requests/"+user.id+"&"+"true", {"session-token": GetSessionToken()})
+        let requestData = await Get("requests/"+user.id+"&"+"false", {"session-token": GetSessionToken()})
         requests = requestData[0]["requests"]
 
         let requestTypeData = await Get("request_types", {"session-token": GetSessionToken()})
         requestTypes = requestTypeData[0]["request_types"]
+        console.log(requests)
         console.log(requestTypes)
         ready = true
     })
@@ -31,9 +32,9 @@
     }
 
     let searchQuery = "";
-                
-    $: filteredRequests = requests && requestTypes ? requests.filter(request => 
-        (requestTypes[request.type_id-1].type_name).includes(searchQuery.toLowerCase())
+    
+    $: filteredRequests = requests&&requestTypes?requests.filter(request => 
+        (requestTypes[request.request.type_id-1].type_name).includes(searchQuery.toLowerCase())
     ) : [];
 </script>
 
@@ -92,8 +93,8 @@
                 <button type="button" on:click={()=>gotoRequest()}>+</button>
             </div>
             <div id="List">
-                {#each filteredRequests as request (request.id)}
-                    <ListItem text={requestTypes[request.type_id-1].type_name} on:click={() => gotoRequest(request.id)}/>
+                {#each filteredRequests as request (request.request.id)}
+                    <ListItem text={requestTypes[request.request.type_id-1].type_name} on:click={() => gotoRequest(request.request.id)}/>
                 {/each}
             </div>
         </div>

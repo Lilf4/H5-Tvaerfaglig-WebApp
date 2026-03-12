@@ -152,7 +152,11 @@
 {#if ready}
     <BackButton backPage={"/admin-page/user-overview/user/"+id+"/schedules"}/>
     <div id="Content">
+        {#if schedule_id == -1}
+        <h1>Create Schedule</h1>
+        {:else}
         <h1>Edit Schedule</h1>
+        {/if}
         <label id="WeekdayLabel" for="WeekdaySelect">
             Weekday
             <select id="WeekdaySelect" bind:value={SelectedWeekday}>
@@ -176,13 +180,19 @@
         </label>
         <div class="SpacerDiv"></div>
         <div id="ButtonDiv">
+            {#if schedule_id == -1}
+            <button type="button" on:click={() => {update()}}>Create</button>
+            {:else}
             <button type="button" on:click={() => {update()}}>Update</button>
+            {/if}
             <button type="button" on:click={async () => {setDefault()}}>Defaults</button>
         </div>
         <div class="SpacerDiv"></div>
+        {#if schedule_id != -1}
         <div id="ButtonDiv">
             <button type="button" on:click={() => {removeSchedule()}}>Delete</button>
         </div>
+        {/if}
     </div>
 {:else}
     <AnimatedLoading/>

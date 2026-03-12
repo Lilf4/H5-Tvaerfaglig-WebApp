@@ -105,7 +105,11 @@
 {#if ready}
     <BackButton backPage={"/admin-page/device-overview"}/>
     <div id="Content">
+        {#if device_id == -1}
+        <h1>Create Device</h1>
+        {:else}
         <h1>Edit Device</h1>
+        {/if}
         <label id="NameLabel" for="NameInput">
             Device Name
             {#if device_id == -1}
@@ -121,8 +125,9 @@
         <div id="ButtonDiv">
             {#if device_id == -1}
             <button type="button" on:click={() => {update()}}>Create</button>
-            {/if}
+            {:else}
             <button type="button" on:click={() => {removeDevice()}}>Delete</button>
+            {/if}
         </div>
         <div class="SpacerDiv"></div>
         <div id="ButtonDiv">

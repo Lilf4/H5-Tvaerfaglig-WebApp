@@ -81,7 +81,7 @@
         <h1>Device Overview</h1>
         <div id="ListContent">
             <div id="ListSearch">
-                <input type="text" placeholder="Search User" bind:value={searchQuery}>
+                <input type="text" placeholder="Search Device" bind:value={searchQuery}>
                 <button type="button" on:click={createDevice()}>+</button>
             </div>
             <div id="List">

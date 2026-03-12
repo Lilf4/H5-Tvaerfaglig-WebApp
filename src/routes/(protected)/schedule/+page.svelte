@@ -73,9 +73,6 @@
         selDaySchedule = getRelevantSchedules(SelectedDate)
         selDayRequest = getRelevantRequest(SelectedDate)
 
-        console.log(selDayRequest)
-        //console.log(requestData)
-
         ready = true
     })
 
@@ -117,6 +114,7 @@
             
             if (
                 request.processed != null &&
+                request.processed.accepted != false &&
                 SelectedDate.getFullYear() >= Number(splitStartRequestDate[0]) &&
                 SelectedDate.getFullYear() <= Number(splitEndRequestDate[0]) &&
                 (SelectedDate.getMonth()+1) >= Number(splitStartRequestDate[1]) &&
@@ -129,9 +127,15 @@
         });
         tempRequests.forEach(request => {
             relevantRequests.push({
+                "StartYear": Number(request.SplitStartRequestDate[0]),
+                "StartMonth": Number(request.SplitStartRequestDate[1]),
+                "StartDay": Number(request.SplitStartRequestDate[2]),
                 "StartHour": Number(request.SplitStartRequestDate[3]),
                 "StartMin": Number(request.SplitStartRequestDate[4]),
                 "StartPercent": (1-request.SplitStartRequestDate[4]/60)*100,
+                "EndYear": Number(request.SplitEndRequestDate[0]),
+                "EndMonth": Number(request.SplitEndRequestDate[1]),
+                "EndDay": Number(request.SplitEndRequestDate[2]),
                 "EndHour": Number(request.SplitEndRequestDate[3]),
                 "EndMin": Number(request.SplitEndRequestDate[4]),
                 "EndPercent": (request.SplitEndRequestDate[4]/60*100),
@@ -399,7 +403,7 @@
                                         style={((hour == schedule.StartHour) ? "height: "+(schedule.StartPercent)+"%;": "") + ((hour == schedule.EndHour) ? "height: "+(schedule.EndPercent)+"%;": "")}>
 
                                         {#if hour == schedule.StartHour}
-                                            <p style="font-size: smaller; position: relative; top: 0px;">
+                                            <p style="font-size: smaller; position: absolute; top: 0px;">
                                                 {String(schedule.StartHour).padStart(2, '0')}:{String(schedule.StartMin).padStart(2, '0')} -
                                                 {String(schedule.EndHour).padStart(2, '0')}:{String(schedule.EndMin).padStart(2, '0')}
                                             </p>
@@ -412,13 +416,47 @@
                         {#each selDayRequest as request}
                         {#if request != null}
                         <td>
-                            {#if hour >= request.StartHour && hour <= request.EndHour}
+                            {#if 
+                                SelectedDate.getFullYear() >= request.StartYear &&
+                                SelectedDate.getFullYear() <= request.EndYear &&
+                                (SelectedDate.getMonth()+1) >= request.StartMonth &&
+                                (SelectedDate.getMonth()+1) <= request.EndMonth &&
+                                SelectedDate.getDate() >= request.StartDay &&
+                                SelectedDate.getDate() <= request.EndDay
+                            }
                                 <div
-                                    class={(hour == request.StartHour ? "Start":"")+" "+((hour>request.StartHour&&hour<request.EndHour) ? "Middle":"")+" "+(request.EndHour===hour ? "End":"")+" Request"}
-                                    style={((hour == request.StartHour) ? "height: "+(request.StartPercent)+"%;": "") + ((hour == request.EndHour) ? "height: "+(request.EndPercent)+"%;": "")}>
+                                    class={
+                                            ((SelectedDate.getDate() == request.StartDay && hour == request.StartHour) ? "Start" : "") + " " +
+                                            (
+                                                (
+                                                    SelectedDate.getDate() > request.StartDay &&
+                                                    SelectedDate.getDate() < request.EndDay
+                                                ) ||
+                                                (
+                                                    (SelectedDate.getDate() == request.StartDay &&
+                                                    hour > request.StartHour) && 
+                                                    (SelectedDate.getDate() < request.EndDay ||
+                                                    hour < request.EndHour)
+                                                ) ||
+                                                (
+                                                    SelectedDate.getDate() == request.EndDay &&
+                                                    hour < request.EndHour && 
+                                                    (SelectedDate.getDate() > request.StartDay ||
+                                                    hour > request.StartHour)
+                                                )
+                                                ? "Middle"
+                                                : ""
+                                            ) + " " +
 
-                                    {#if hour == request.StartHour}
-                                        <p style="font-size: smaller; position: relative; top: 0px;">
+                                            ((SelectedDate.getDate() == request.EndDay && hour == request.EndHour) ? "End" : "") + " ProcessedRequest"
+                                        }
+                                    style={
+                                        ((SelectedDate.getDate() == request.StartDay && hour == request.StartHour) ? "height: "+(request.StartPercent)+"%;": "")+
+                                        ((SelectedDate.getDate() == request.EndDay && hour == request.EndHour) ? "height: "+(request.EndPercent)+"%;": "")}
+                                >
+
+                                    {#if (SelectedDate.getDate() == request.StartDay && hour == request.StartHour)}
+                                        <p style="font-size: smaller; position: absolute; top: 0px;">
                                             {String(request.StartHour).padStart(2, '0')}:{String(request.StartMin).padStart(2, '0')} -
                                             {String(request.EndHour).padStart(2, '0')}:{String(request.EndMin).padStart(2, '0')}: {request.RequestType}
                                         </p>

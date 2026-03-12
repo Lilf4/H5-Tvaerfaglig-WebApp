@@ -145,7 +145,11 @@
         <BackButton backPage={"/admin-page/user-overview/"}/>
     {/if}
     <div id="Content">
+        {#if id == -1}
+        <h1>Create User</h1>
+        {:else}
         <h1>Edit {originalUser.name}</h1>
+        {/if}
         <label id="UsernameLabel" for="UsernameInput">
             Username
             <input id="UsernameInput" type="text" placeholder="Username" bind:value="{user.username}">
@@ -175,9 +179,13 @@
             New Password Again
             <input id="NewPasswordConfirmInput" type="password" placeholder="Password" bind:value={newPassConfirm}>
         </label>
-
+        
         <div id="ButtonDiv">
+            {#if id != -1}
             <button type="button" on:click={() => {update()}}>Update</button>
+            {:else}
+            <button type="button" on:click={() => {update()}}>Create</button>
+            {/if}
             <button type="button" on:click={async () => {setDefault()}}>Defaults</button>
         </div>
     </div>
