@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  sveltekit-app:
+    build: .
+    container_name: WebApp
+    ports:
+      - "${APP_PORT}:3000"
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
