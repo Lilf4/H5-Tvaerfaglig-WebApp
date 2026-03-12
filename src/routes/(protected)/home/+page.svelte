@@ -30,6 +30,12 @@
             ValidateSession()
         })
     }
+
+	function ForceCheckInOut(){
+		
+	}
+
+	export let data;
 </script>
 
 
