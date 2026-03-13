@@ -15,6 +15,7 @@
 
     let Requests = null;
     let RequestTypes = null;
+    let WorkedTimes = null;
 
     function openCalendar() {
         dateInput.showPicker();
@@ -70,9 +71,13 @@
 
         let requestTypeData = await Get("request_types", {"session-token": GetSessionToken()})
         RequestTypes = requestTypeData[0]["request_types"]
+        
+        let workedTimeData = await Get("worked_times/"+user.id, {"session-token": GetSessionToken()})
+        WorkedTimes = workedTimeData[0]["worked_times"]
+
         selDaySchedule = getRelevantSchedules(SelectedDate)
         selDayRequest = getRelevantRequest(SelectedDate)
-
+        selWorkedTimes = getRelevantWorkedTimes(SelectedDate)
         ready = true
     })
 
@@ -145,8 +150,33 @@
         return relevantRequests
     }
 
+    function getRelevantWorkedTimes(date){
+        let tempDate = new Date(date)
+        if (WorkedTimes == null) return [null]
+        let relevantWorkedTimes = []
+        WorkedTimes.forEach(WorkedTime => {
+            let DateTimeSplit = WorkedTime.actualDate.split("-")
+            if (tempDate.getFullYear() == DateTimeSplit[0] && tempDate.getMonth()+1 == DateTimeSplit[1] && tempDate.getDate() == DateTimeSplit[2]){
+                let SplitStartTime = WorkedTime.actualStart.split(":").slice(0, 2)
+                let SplitEndTime = WorkedTime.actualEnd ? WorkedTime.actualEnd.split(":").slice(0, 2) : null
+                relevantWorkedTimes.push({
+                    "StartHour": Number(SplitStartTime[0]),
+                    "StartMin": Number(SplitStartTime[1]),
+                    "StartPercent": Number(1-SplitStartTime[1]/60)*100,
+                    "EndHour": SplitEndTime ? Number(SplitEndTime[0]) : null,
+                    "EndMin": SplitEndTime ? Number(SplitEndTime[1]) : null,
+                    "EndPercent": SplitEndTime ? Number(SplitStartTime[1]/60*100) : null,
+                    "Active": Boolean(WorkedTime.active)
+                })
+            }
+        })
+        console.log(relevantWorkedTimes)
+        return relevantWorkedTimes
+    }
+
     $: selDaySchedule = getRelevantSchedules(SelectedDate)
     $: selDayRequest = getRelevantRequest(SelectedDate)
+    $: selWorkedTimes = getRelevantWorkedTimes(SelectedDate)
     
 </script>
 
@@ -229,6 +259,19 @@
     #ScheduleContent table tbody td .ProcessedRequest{
         background-color: rgba(0, 255, 255, 0.7);
         
+    }
+
+    #ScheduleContent table tbody td .WorkedTime{
+        background-color: rgba(129, 218, 88, 0.3);
+        
+    }
+
+    #ScheduleContent table tbody td .CurrTime{
+        background-color: rgba(255, 0, 0, 0.3);
+        height: 3px;
+        width: 100%;
+        position: absolute;
+        top: 0%;
     }
 
     /*
@@ -391,7 +434,12 @@
                 <tbody>
                     {#each [...Array(24).keys()] as hour}
                     <tr>
-                        <td>{String(hour).padStart(2, '0')}:00</td>
+                        <td>
+                            {String(hour).padStart(2, '0')}:00
+                            {#if new Date().getHours() == hour}
+                                <div class="CurrTime" style={"top: "+(new Date().getMinutes()/60*100)+"%;"}></div>
+                            {/if}
+                        </td>
                         {#key hour}
                             {@const schedule = selDaySchedule.find(
                                 s => s && hour >= s.StartHour && hour <= s.EndHour
@@ -411,6 +459,14 @@
 
                                     </div>
                                 {/if}
+                                {#each selWorkedTimes as w}
+                                    {#if w && hour >= w.StartHour && ((!w.Active && hour <= w.EndHour) || (w.Active && hour <= new Date().getHours()))}
+                                        <div
+                                            class={(hour == w.StartHour ? "Start":"")+" "+((hour>w.StartHour&&hour<w.EndHour) ? "Middle":"")+" "+(((!w.Active && w.EndHour===hour) || (w.Active && new Date().getHours()===hour)) ? "End":"")+" WorkedTime"}
+                                            style={((hour == w.StartHour) ? "height: "+(w.StartPercent)+"%;": "") + (((!w.Active && w.EndHour===hour) || (w.Active && new Date().getHours()===hour)) ? "height: "+(!w.Active ? w.EndPercent : (new Date().getMinutes() / 60 * 100))+"%;": "")}>
+                                        </div>
+                                    {/if}
+                                {/each}
                             </td>
                         {/key}
                         {#each selDayRequest as request}

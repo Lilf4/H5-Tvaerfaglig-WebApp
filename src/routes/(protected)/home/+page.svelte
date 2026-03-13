@@ -13,12 +13,13 @@
     import scheduleImg from "$lib/assets/schedule.png"
     import adminImg from "$lib/assets/admin.png"
     import Loading from "$lib/Components/AnimatedLoading.svelte";
-
+    let user = null;
     let name
     let role
     let ready = false
     onMount(async ()=>{
         let userData = await Get("self", {"session-token": GetSessionToken()}).then((d) => {return d[0]})
+        user = userData["user"]
         name = userData["user"]["name"]
         role = userData["user"]["role"]["role"]
         ready = true
@@ -31,9 +32,16 @@
         })
     }
 
-	function ForceCheckInOut(){
-		
-	}
+	async function ForceCheckInOut(){
+        let CheckInCode = await Get("check_in_code", {"device-code": "A8Tt5OK0nb4TNFY5ttbcw4HIVVeNi1Lq"})
+        let CheckInRes = await Post("check_in_out/"+user.id, null, {"check-in-code": CheckInCode[0].code})
+        alert(CheckInRes.message)
+    }
+
+    function TryCheckInOut(){
+        //Await barcode scan and try check in
+        alert("Hey you are on a phone this feature is still being developed")
+    }
 
 	export let data;
 </script>
@@ -70,7 +78,14 @@
         <HomeScreenButton on:click={()=>goto("/profile")} image={userImg} text="Profile"/>
         <HomeScreenButton on:click={()=>goto("/schedule")} image={scheduleImg} text="Schedule"/>
         <HomeScreenButton on:click={()=>goto("/request-overview")} image={requestImg} text="Request"/>
-        <HomeScreenButton image={checkinImg} text="Check-in/out"/>
+        
+
+        {#if data.isAndroid}
+            <HomeScreenButton image={checkinImg} text="Check-in/out"/>
+        {:else}
+            <HomeScreenButton image={checkinImg} on:click={ForceCheckInOut} text="Check-in/out"/>
+        {/if}    
+        
         {#if role === 'leder'}
             <HomeScreenButton on:click={()=>goto("/admin-page")} image={adminImg} text="Admin Page"/>
         {/if}
