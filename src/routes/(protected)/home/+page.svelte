@@ -45,8 +45,8 @@
 
     async function TryCheckInOut(){
         let qrData = await ScanQR()
-        qrText = qrData
-        alert("Hey you are on a phone! this feature is still being developed")
+		let CheckInRes = await Post("check_in_out/"+user.id, null, {"check-in-code": qrData})
+        alert(CheckInRes[0].message)
     }
 
     async function ScanQR(){
@@ -58,9 +58,8 @@
             }
         });
 
-        if (result.hasContent) {
-            console.log('QR code:', result.content);
-            return result.content
+        if (result.ScanResult) {
+            return result.ScanResult
         }
     }
 
@@ -94,7 +93,6 @@
     <div id="HomeScreenTitle">
         <h1>Hello {name}!</h1>
     </div>
-    <p>QR TEST: {qrText}</p>
     <div id="HomeScreenButtons">
         <HomeScreenButton on:click={()=>goto("/profile")} image={userImg} text="Profile"/>
         <HomeScreenButton on:click={()=>goto("/schedule")} image={scheduleImg} text="Schedule"/>
