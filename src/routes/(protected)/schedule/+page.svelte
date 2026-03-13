@@ -227,9 +227,9 @@
     }
 
     #ScheduleContent table tbody td {
-        height: 100%;
-        padding: 0px;
-        position:relative;
+        height: 50px; /* same as you have in tr */
+        position: relative; /* needed for absolute children */
+        padding: 0;
     }
 
     #ScheduleContent table tbody td .Start{
@@ -290,6 +290,20 @@
         align-items: flex-start;
     }
     */
+    #ScheduleContent table tbody td .Start,
+    #ScheduleContent table tbody td .Middle,
+    #ScheduleContent table tbody td .End {
+        display: block;
+        min-height: 1px; /* ensures div doesn't collapse */
+    }
+    #ScheduleContent table tbody td .Start::after,
+    #ScheduleContent table tbody td .Middle::after,
+    #ScheduleContent table tbody td .End::after {
+        content: "";
+        display: block;
+        height: 100%;
+        width: 100%;
+    }
     /*END Main Boxes END*/
 
     /*START Week/Date Display START*/
@@ -449,14 +463,12 @@
                                     <div
                                         class={(hour == schedule.StartHour ? "Start":"")+" "+((hour>schedule.StartHour&&hour<schedule.EndHour) ? "Middle":"")+" "+(schedule.EndHour===hour ? "End":"")+" Schedule"}
                                         style={((hour == schedule.StartHour) ? "height: "+(schedule.StartPercent)+"%;": "") + ((hour == schedule.EndHour) ? "height: "+(schedule.EndPercent)+"%;": "")}>
-
                                         {#if hour == schedule.StartHour}
                                             <p style="font-size: smaller; position: absolute; top: 0px;">
                                                 {String(schedule.StartHour).padStart(2, '0')}:{String(schedule.StartMin).padStart(2, '0')} -
                                                 {String(schedule.EndHour).padStart(2, '0')}:{String(schedule.EndMin).padStart(2, '0')}
                                             </p>
                                         {/if}
-
                                     </div>
                                 {/if}
                                 {#each selWorkedTimes as w}

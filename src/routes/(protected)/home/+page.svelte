@@ -13,6 +13,9 @@
     import scheduleImg from "$lib/assets/schedule.png"
     import adminImg from "$lib/assets/admin.png"
     import Loading from "$lib/Components/AnimatedLoading.svelte";
+
+    import { CapacitorBarcodeScanner,  CapacitorBarcodeScannerTypeHint, CapacitorBarcodeScannerCameraDirection, CapacitorBarcodeScannerAndroidScanningLibrary } from "@capacitor/barcode-scanner";
+    
     let user = null;
     let name
     let role
@@ -35,12 +38,30 @@
 	async function ForceCheckInOut(){
         let CheckInCode = await Get("check_in_code", {"device-code": "A8Tt5OK0nb4TNFY5ttbcw4HIVVeNi1Lq"})
         let CheckInRes = await Post("check_in_out/"+user.id, null, {"check-in-code": CheckInCode[0].code})
-        alert(CheckInRes.message)
+        alert(CheckInRes[0].message)
     }
 
-    function TryCheckInOut(){
-        //Await barcode scan and try check in
-        alert("Hey you are on a phone this feature is still being developed")
+    let qrText = ""
+
+    async function TryCheckInOut(){
+        let qrData = await ScanQR()
+        qrText = qrData
+        alert("Hey you are on a phone! this feature is still being developed")
+    }
+
+    async function ScanQR(){
+        const result = await CapacitorBarcodeScanner.scanBarcode({
+            hint: CapacitorBarcodeScannerTypeHint.ALL,
+            cameraDirection: CapacitorBarcodeScannerCameraDirection.BACK,
+            android: {
+                scanningLibrary: CapacitorBarcodeScannerAndroidScanningLibrary.ZXING
+            }
+        });
+
+        if (result.hasContent) {
+            console.log('QR code:', result.content);
+            return result.content
+        }
     }
 
 	export let data;
@@ -73,7 +94,7 @@
     <div id="HomeScreenTitle">
         <h1>Hello {name}!</h1>
     </div>
-
+    <p>QR TEST: {qrText}</p>
     <div id="HomeScreenButtons">
         <HomeScreenButton on:click={()=>goto("/profile")} image={userImg} text="Profile"/>
         <HomeScreenButton on:click={()=>goto("/schedule")} image={scheduleImg} text="Schedule"/>
@@ -81,7 +102,7 @@
         
 
         {#if data.isAndroid}
-            <HomeScreenButton image={checkinImg} text="Check-in/out"/>
+            <HomeScreenButton image={checkinImg} on:click={TryCheckInOut} text="Check-in/out"/>
         {:else}
             <HomeScreenButton image={checkinImg} on:click={ForceCheckInOut} text="Check-in/out"/>
         {/if}    
