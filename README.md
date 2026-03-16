@@ -1,42 +1,133 @@
-# sv
+# WebAPP
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Dette projekt kan køres som en WebServer via Docker / Docker Compose.
 
-## Creating a project
+## Krav
 
-If you're seeing this, you've probably already done this step. Congrats!
+For at køre projektet skal følgende være installeret:
 
-```sh
-# create a new project
-npx sv create my-app
+- Docker
+- docker-compose
+
+---
+
+# Opsætning
+
+Før du kan køre projektet, skal du oprette en `.env` fil.
+
+Du kan enten:
+
+- oprette en ny fil kaldet `.env`
+- eller kopiere `.env.example` og omdøbe den
+---
+
+# Environment Variables
+
+I `.env` filen skal følgende variabler defineres:
+
+| Env Variable | Beskrivelse | Eksempel |
+|---|---|---|
+| APP_PORT | Port som WebServeren kører på | 2000 |
+| PUBLIC_API | URL til WebAPI | https://api.com |
+
+---
+
+# Start WebServer
+
+Når variablerne er defineret kan du starte serveren:
+
+```bash
+docker-compose up -d
 ```
 
-To recreate this project with the same configuration:
+Dette starter applikationen i baggrunden.
 
-```sh
-# recreate this project
-npx sv create --template minimal --types jsdoc --install npm H5-Tvearfaglig-WebApp
+Herefter kan du åbne login siden i browseren:
+
+```
+http://localhost:APP_PORT
 ```
 
-## Developing
+---
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+# Standard Bruger
 
-```sh
-npm run dev
+Du kan teste login med følgende bruger:
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+| Rolle | Username | Password |
+|---|---|---|
+| Leder | Admin | 1234 |
+
+---
+
+# Stop Server
+
+For at stoppe serveren:
+
+```bash
+docker-compose down
 ```
 
-## Building
+For også at fjerne containers og volumes:
 
-To create a production version of your app:
-
-```sh
-npm run build
+```bash
+docker-compose rm
 ```
 
-You can preview the production build with `npm run preview`.
+---
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+# APP (Android)
+
+Projektet er i øjeblikket kun sat op til Android, da der mangler testenheder til andre platforme.
+
+---
+
+# Krav
+
+Følgende skal være installeret:
+
+- Node.js
+- npm
+- Android Studio
+
+---
+
+# Installation
+
+Først installeres dependencies:
+
+```bash
+npm install
+```
+
+---
+
+# Build Android
+
+Byg Android versionen:
+
+```bash
+npm run build:android
+```
+
+---
+
+# Sync Capacitor
+
+Synk Android projektet:
+
+```bash
+npx cap sync
+```
+
+---
+
+# Åbn i Android Studio
+
+Du kan enten åbne projektet manuelt i Android Studio, eller køre:
+
+```bash
+npx cap open android
+```
+
+Når dette er gjort, burde du have et fuldt fungerende Android projekt åbent i Android Studio, hvor du selv kan vælge hvordan du vil teste det.
