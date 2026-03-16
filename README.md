@@ -131,3 +131,7 @@ npx cap open android
 ```
 
 Når dette er gjort, burde du have et fuldt fungerende Android projekt åbent i Android Studio, hvor du selv kan vælge hvordan du vil teste det.
+
+## Pre‑bygget APK
+
+Der findes en pre‑byggede Android APK i [releases](https://github.com/Lilf4/H5-Tvaerfaglig-WebApp/releases/tag/Android_APK) som kan installeres direkte på en enhed.
