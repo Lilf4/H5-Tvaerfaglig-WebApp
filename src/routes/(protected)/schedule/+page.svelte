@@ -371,7 +371,7 @@
     }
 
     #TopBar > .TopSection > .RightSection button{
-        width: 50%;
+        width: 50px;
         background: none;
         border: none;
         cursor: pointer;
